@@ -1,0 +1,22 @@
+{
+  "name": "ULixie",
+  "description": "Allows for easy writing to Lixie Digit (and cousins) displays!",
+  "keywords": "lixie,nixie,diamex,elekstube,glixie,control,digits,display,neopixel,fastled,ws2812b,edge,lit",
+  "authors":
+  {
+    "name": "Phons Bloemen",
+    "email": "phons@planet.nl"
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/phizes/ULixie.git"
+  },
+  "version": "1.4.0",
+  "examples": "examples/*.ino",
+  "frameworks": "arduino",
+  "platforms":
+  [
+    "atmelavr","ststm32"
+  ]
+}
