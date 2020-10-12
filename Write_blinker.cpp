@@ -9,7 +9,10 @@
    of the write action.
    - trans_time will indicate the blinking speed.
 */
+
+//#ifndef ULixie_h
 #include "ULixie.h"
+//#endif
 
 void ULixie::write_blinker(String input){
 
@@ -24,8 +27,6 @@ void ULixie::write_blinker(String input){
     uint8_t reelsstopped;
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
-
-    uint8_t n_digits = get_n_digits();
     
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
@@ -39,9 +40,9 @@ void ULixie::write_blinker(String input){
     delaytime = t_now;
     j = 0;
     num = 0;
-    t_now = millis() + get_trans_time() + 1;
+    t_now = millis() + trans_time + 1;
     while (j < 19) {
-       if ((t_now - delaytime) > get_trans_time()) {
+       if ((t_now - delaytime) > trans_time) {
           digitwritten=0;
           for (i = 0; i < (n_digits); i++) {
              if ((j % 2) == 0) {

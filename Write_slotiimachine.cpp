@@ -9,8 +9,9 @@
    before preivious reel stops. 
    - trans time indicates the spinning speed
 */
-
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_slotiimachine(String input){
 
@@ -30,8 +31,6 @@ void ULixie::write_slotiimachine(String input){
     uint8_t reelsstopped;
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
-    
-    uint8_t n_digits = get_n_digits();
     
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
@@ -63,7 +62,7 @@ void ULixie::write_slotiimachine(String input){
           for (i = 0; i < n_digits; i++) {
              if (delay_index[i] < 20) {
                 if ((t_now - delay_times[i]) > 
-                     (get_trans_time() * delay_table[delay_index[i]]) / 10) {
+                     (trans_time * delay_table[delay_index[i]]) / 10) {
                    num = read_digit(i) + random(9) % 10;
                    if (next_digits[i] > 10) num = 128;
                    delay_index[i] = delay_index[i] + 1;

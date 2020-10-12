@@ -9,7 +9,10 @@
    - dir will indicate the direction (left to right / right to left) 
    - trans_time will indicate the pushing speed.
 */        
+
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_scroll(String input, uint8_t dir){
 
@@ -25,8 +28,6 @@ void ULixie::write_scroll(String input, uint8_t dir){
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
     
-    uint8_t n_digits = get_n_digits();
-    
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
     delay_times = new uint32_t[n_digits];
@@ -39,9 +40,9 @@ void ULixie::write_scroll(String input, uint8_t dir){
     reelsstopped = 0;
     num = 0;
     delaytime = 0;
-    t_now = millis() + get_trans_time() + 1;
+    t_now = millis() + trans_time + 1;
     while (reelsstopped < n_digits + 1) {
-       if ((t_now - delaytime) > get_trans_time()) {
+       if ((t_now - delaytime) > trans_time) {
           digitwritten = 0;
           for (i = 0; i < (n_digits); i++) {
              j = i + reelsstopped;

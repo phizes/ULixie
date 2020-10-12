@@ -11,7 +11,9 @@
    - trans_time will indicate the spinning speed.
 */
 
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_slotmachine(String input){
 
@@ -31,8 +33,6 @@ void ULixie::write_slotmachine(String input){
     uint8_t reelsstopped;
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
-    
-    uint8_t n_digits = get_n_digits();
     
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
@@ -64,7 +64,7 @@ void ULixie::write_slotmachine(String input){
              if (delay_index[i] < 20) {
                 for (j = i; j < n_digits; j++) {
                    if ((t_now - delay_times[j]) > 
-                        (get_trans_time() * delay_table[delay_index[j]] / 10)) {
+                        (trans_time * delay_table[delay_index[j]] / 10)) {
                       if (j == i) {
                          delay_index[j] += 1;
                       }

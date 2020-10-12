@@ -76,128 +76,114 @@ float bright = 1.0;
 bool background_updates = true;
 
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-  Ticker lixie_animation;
+   Ticker lixie_animation;
 #endif
 
-uint8_t get_n_digits() {
-  return n_digits; 
-}
-
-uint8_t get_trans_effect()  {
-   return trans_effect;
-}
-
-uint32_t get_trans_time()  {
-   return trans_time;
-}
-
 uint16_t led_to_x_pos(uint16_t led){
-  uint8_t led_digit_pos = x_offsets[led%leds_per_digit];
+   uint8_t led_digit_pos = x_offsets[led%leds_per_digit];
   
-  uint8_t complete_digits = 0;
-  while(led >= leds_per_digit){
-    led -= leds_per_digit;
-    complete_digits += 1;
-  }
-  
-  return max_x_pos - (led_digit_pos + (complete_digits*6));
+   uint8_t complete_digits = 0;
+   while(led >= leds_per_digit){
+       led -= leds_per_digit;
+       complete_digits += 1;
+   }  
+   return max_x_pos - (led_digit_pos + (complete_digits*6));
 }
 
 void animate() {
-  uint32 t_animate = millis();
-  float mask_fader = 1.0;
+   uint32 t_animate = millis();
+   float mask_fader = 1.0;
   
-  if (((t_animate - t_lastanimate) < 20) && (mustnowanimate == false)) { 
-     // 20ms is 50 frames per second, do nothing if this call is too soon
-     return;
-  }
+   if (((t_animate - t_lastanimate) < 20) && (mustnowanimate == false)) { 
+// 20ms is 50 frames per second, do nothing if this call is too soon
+       return;
+   }
 //    t_lastanimate = t_lastanimate + 21;
-  t_lastanimate = t_animate;
+   t_lastanimate = t_animate;
 
-  switch (trans_type) {
-
-     case CROSSFADE2:
-        mask_fader = mask_fader * (float)(t_animate - t_lastmaskupdate) / trans_time;
-     case DEEPFADE:
-     case CROSSFADE:
-        mask_fader = mask_fader * (float)(t_animate - t_lastmaskupdate) / trans_time;
-     case INSTANT:
-        mask_fader = mask_fader * 1;
-  }
+   switch (trans_type) {
+   case CROSSFADE2:
+       mask_fader = mask_fader * (float)(t_animate - t_lastmaskupdate) / trans_time;
+   case DEEPFADE:
+   case CROSSFADE:
+       mask_fader = mask_fader * (float)(t_animate - t_lastmaskupdate) / trans_time;
+   case INSTANT:
+       mask_fader = mask_fader * 1;
+   }
   
-  if ((mask_fader > 0.99) || (trans_type == INSTANT) || 
+   if ((mask_fader > 0.99) || (trans_type == INSTANT) || 
       ((t_animate - t_lastmaskupdate) > trans_time)) {
-    mask_fader = 1.0;
-    mask_fade_finished = true;      
-  }
+       mask_fader = 1.0;
+       mask_fade_finished = true;      
+   }
 
-  uint8_t pcb_index = 0;
+   uint8_t pcb_index = 0;
   
-  for(uint16_t i = 0; i < n_LEDs; i++) {
-    float mask_float;
-    CRGB new_col;
-    uint32_t r,g,b;
-    uint8_t mask_input_0 = led_mask_0[i];
-    uint8_t mask_input_1 = led_mask_1[i];
+   for(uint16_t i = 0; i < n_LEDs; i++) {
+       float mask_float;
+       CRGB new_col;
+       uint32_t r,g,b;
+       uint8_t mask_input_0 = led_mask_0[i];
+       uint8_t mask_input_1 = led_mask_1[i];
     
-    if(current_mask == 0) {   
-       mask_float = ((mask_input_0*(1-mask_fader)) + (mask_input_1*(mask_fader)));
-    } else if(current_mask == 1) {
-       mask_float = ((mask_input_1*(1-mask_fader)) + (mask_input_0*(mask_fader)));
-    }      
-    if (trans_type == DEEPFADE) {
-       if (current_mask == 0) {
-          if ((mask_input_0 > 0) && (mask_input_1 == 0)) {
-             if (mask_fader < 0.45) {
-                 mask_float = mask_input_0 * (1.0 - (2.2 * mask_fader));
-             } else {
-                 mask_float = 0.0;
-             }
-          }
-          if ((mask_input_1 > 0) && (mask_input_0 == 0)) {
-             if (mask_fader > 0.55) {
-                 mask_float = mask_input_1 * ((mask_fader - 0.55) * 2.2); 
-             } else {
-                 mask_float = 0.0;
-             }
-          }
-        } else if (current_mask == 1) {
-          if ((mask_input_1 > 0) && (mask_input_0 == 0)) {
-             if (mask_fader < 0.45) {
-                 mask_float = mask_input_1 * (1.0 - (2.2 * mask_fader));
-             } else {
-                 mask_float = 0.0;
-             }
-          }
-          if ((mask_input_0 > 0) && (mask_input_1 == 0)) {
-             if (mask_fader > 0.55) {
-                 mask_float = mask_input_0 * ((mask_fader - 0.55) * 2.2); 
-             } else {
-                 mask_float = 0.0;
-             }
-          }
+       if (current_mask == 0) {   
+           mask_float = ((mask_input_0*(1-mask_fader)) + (mask_input_1*(mask_fader)));
+       } else if (current_mask == 1) {
+           mask_float = ((mask_input_1*(1-mask_fader)) + (mask_input_0*(mask_fader)));
+       }      
+       if (trans_type == DEEPFADE) {
+           if (current_mask == 0) {
+               if ((mask_input_0 > 0) && (mask_input_1 == 0)) {
+                   if (mask_fader < 0.45) {
+                       mask_float = mask_input_0 * (1.0 - (2.2 * mask_fader));
+                   } else {
+                       mask_float = 0.0;
+                   }
+               }
+               if ((mask_input_1 > 0) && (mask_input_0 == 0)) {
+                   if (mask_fader > 0.55) {
+                       mask_float = mask_input_1 * ((mask_fader - 0.55) * 2.2); 
+                   } else {
+                       mask_float = 0.0;
+                   }
+               }
+           } else if (current_mask == 1) {
+               if ((mask_input_1 > 0) && (mask_input_0 == 0)) {
+                   if (mask_fader < 0.45) {
+                       mask_float = mask_input_1 * (1.0 - (2.2 * mask_fader));
+                   } else {
+                       mask_float = 0.0;
+                   }
+               }
+               if ((mask_input_0 > 0) && (mask_input_1 == 0)) {
+                   if (mask_fader > 0.55) {
+                       mask_float = mask_input_0 * ((mask_fader - 0.55) * 2.2); 
+                   } else {
+                       mask_float = 0.0;
+                   }
+               }
+           }
        }
-    }
-    if (mask_fade_finished == true) {
-        if (current_mask == 0) {  
-           mask_float = (float) mask_input_1;
-           led_mask_0[i] = led_mask_1[i];
-        } else if (current_mask == 1) {
-           mask_float = (float) mask_input_0;
-           led_mask_1[i] = led_mask_0[i];
-        }         
-    }
+       if (mask_fade_finished == true) {
+           if (current_mask == 0) {  
+               mask_float = (float) mask_input_1;
+               led_mask_0[i] = led_mask_1[i];
+           } else if (current_mask == 1) {
+               mask_float = (float) mask_input_0;
+               led_mask_1[i] = led_mask_0[i];
+           }          
+       }
     
-    r = ((col_on[i].r*mask_float) + 
+       r = ((col_on[i].r*mask_float) + 
                  (col_off[i].r*(255-mask_float)) * bright) / 255;
-    g = ((col_on[i].g*mask_float) + 
+       g = ((col_on[i].g*mask_float) + 
                  (col_off[i].g*(255-mask_float)) * bright) / 255;
-    b = ((col_on[i].b*mask_float) + 
+       b = ((col_on[i].b*mask_float) + 
                  (col_off[i].b*(255-mask_float)) * bright) / 255;
    
-    new_col.r = (uint8_t) r;
-    new_col.g = (uint8_t) g;
-    new_col.b = (uint8_t) b;
+       new_col.r = (uint8_t) r;
+       new_col.g = (uint8_t) g;
+       new_col.b = (uint8_t) b;
     
 /*    if ((i > 49) && (i < 60) && (trans_type != INSTANT) && (mask_fade_finished == false) &&
         ((led_mask_0[i] + led_mask_1[i])> 0) && (mask_fader >0.8)) {
@@ -272,209 +258,161 @@ void animate() {
        Serial.println(mask_float);
     }       
 */        
-    lix_leds[i] = new_col;  
+       lix_leds[i] = new_col;  
 
 #ifdef PANE11	
 	// Check for special pane enabled for the current digit, and use its color instead if it is.
-	  uint8_t digit_index = i/leds_per_digit;
-	  if(special_panes_enabled[digit_index]){
-		  if(pcb_index == 4){
-		    lix_leds[i] = special_panes_color[digit_index*2];
-		  } else if(pcb_index == 17){
-		    lix_leds[i] = special_panes_color[digit_index*2+1];
-		  }
-	  }
-    pcb_index++;
-	  if(pcb_index >= leds_per_digit){
+	   uint8_t digit_index = i/leds_per_digit;
+	   if(special_panes_enabled[digit_index]){
+		   if(pcb_index == 4) {
+		       lix_leds[i] = special_panes_color[digit_index*2];
+           } else if(pcb_index == 17) {
+		       lix_leds[i] = special_panes_color[digit_index*2+1];
+           }
+	   }
+       pcb_index++;
+	   if(pcb_index >= leds_per_digit){
 		   pcb_index = 0;
-	  } 
+	   } 
 #endif
-  }
-
-  lix_controller->showLeds(); 
-  
-  mustnowanimate = false;
-  if (mask_fade_finished == true) {
-     if (current_mask == 0) {
-        current_mask = 1;
-     } else { 
-        current_mask = 0;
-     }
    }
-}
 
-void ULixie::mask_update(){
-// mask_fader = 0.0;
+   lix_controller->showLeds(); 
   
-//  if(trans_type == INSTANT){
-//    mask_push = 1.0;
-//  }
-//  else{
-//    float trans_multiplier = float(trans_time) / float(1000.0);
-//   mask_push = (float) 1.0 / float(50.0 * trans_multiplier);
-//  }
-  mask_fade_finished = false;
-  t_lastmaskupdate = millis();
-}
-
-
-void ULixie::mask_toggle() {
-//    if(current_mask == 0){
-//      current_mask = 1;
-//    } else if(current_mask == 1){
-//       current_mask = 0;
-//    }
-    mask_update();
-    animate();
-//     wait();
-}
-
-void ULixie::transition_type(uint8_t type){
-  trans_type = type;
-}
-
-void ULixie::transition_time(uint16_t ms){
-  trans_time = ms;
-}
-
-void ULixie::transition_effect(uint16_t type){
-  trans_effect = type;
-}
-
-void ULixie::run(){
-  animate();
-}
-
-void ULixie::wait(){
-  while(mask_fade_finished == false) {
-    animate();
-  }
+   mustnowanimate = false;
+   if (mask_fade_finished == true) {
+       if (current_mask == 0) {
+           current_mask = 1;
+       } else { 
+           current_mask = 0;
+       }
+   }
 }
 
 void ULixie::start_animation(){
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-  lixie_animation.attach_ms(20, animate);
+   lixie_animation.attach_ms(20, animate);
 #elif defined(__AVR__)  
-  // TIMER 1 for interrupt frequency 50 Hz:
-  cli(); // stop interrupts
-  TCCR1A = 0; // set entire TCCR1A register to 0
-  TCCR1B = 0; // same for TCCR1B
-  TCNT1  = 0; // initialize counter value to 0
-  // set compare match register for 50 Hz increments
-  OCR1A = 39999; // = 16000000 / (8 * 50) - 1 (must be <65536)
-  // turn on CTC mode
-  TCCR1B |= (1 << WGM12);
-  // Set CS12, CS11 and CS10 bits for 8 prescaler
-  TCCR1B |= (0 << CS12) | (1 << CS11) | (0 << CS10);
-  // enable timer compare interrupt
-  TIMSK1 |= (1 << OCIE1A);
-  sei(); // allow interrupts
+   // TIMER 1 for interrupt frequency 50 Hz:
+   cli(); // stop interrupts
+   TCCR1A = 0; // set entire TCCR1A register to 0
+   TCCR1B = 0; // same for TCCR1B
+   TCNT1  = 0; // initialize counter value to 0
+   // set compare match register for 50 Hz increments
+   OCR1A = 39999; // = 16000000 / (8 * 50) - 1 (must be <65536)
+   // turn on CTC mode
+   TCCR1B |= (1 << WGM12);
+   // Set CS12, CS11 and CS10 bits for 8 prescaler
+   TCCR1B |= (0 << CS12) | (1 << CS11) | (0 << CS10);
+   // enable timer compare interrupt
+   TIMSK1 |= (1 << OCIE1A);
+   sei(); // allow interrupts
 #endif
 }
 
 #if defined(__AVR__)  
 ISR(TIMER1_COMPA_vect){
-   animate();
+    animate();
 }
 #endif
 
 void ULixie::stop_animation(){
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-  lixie_animation.detach();
+   lixie_animation.detach();
 #endif
 }
 
 ULixie::ULixie(const uint8_t pin, uint8_t number_of_digits){
-  n_LEDs = number_of_digits * leds_per_digit;
-  n_digits = number_of_digits;
-  max_x_pos = (number_of_digits * 6)-1;
+   n_LEDs = number_of_digits * leds_per_digit;
+   n_digits = number_of_digits;
+   max_x_pos = (number_of_digits * 6)-1;
   
-  lix_leds = new CRGB[n_LEDs];  
-  led_mask_0 = new uint8_t[n_LEDs];
-  led_mask_1 = new uint8_t[n_LEDs];
+   lix_leds = new CRGB[n_LEDs];  
+   led_mask_0 = new uint8_t[n_LEDs];
+   led_mask_1 = new uint8_t[n_LEDs];
 
 #ifdef PANE11  
-  special_panes_enabled = new bool[n_digits];
-  special_panes_color = new CRGB[n_digits*2];
+   special_panes_enabled = new bool[n_digits];
+   special_panes_color = new CRGB[n_digits*2];
 #endif
     
-  col_on = new CRGB[n_LEDs];
-  col_off = new CRGB[n_LEDs];
+   col_on = new CRGB[n_LEDs];
+   col_off = new CRGB[n_LEDs];
   
-  cur_digits = new uint8_t[n_digits];
-  cur_col_on = new CRGB[n_digits];
-  cur_col_off= new CRGB[n_digits];
+   cur_digits = new uint8_t[n_digits];
+   cur_col_on = new CRGB[n_digits];
+   cur_col_off= new CRGB[n_digits];
   
-  for(uint16_t i = 0; i < n_LEDs; i++){
-    led_mask_0[i] = 0;
-    led_mask_1[i] = 0;
+   for(uint16_t i = 0; i < n_LEDs; i++){
+       led_mask_0[i] = 0;
+       led_mask_1[i] = 0;
     
-    col_on[i] = CRGB(222,222,222);
-    col_off[i] = CRGB(2,6,0);
-  }
+       col_on[i] = CRGB(222,222,222);
+       col_off[i] = CRGB(2,6,0);
+   }
 
 #ifdef PANE11
-  for(uint16_t i = 0; i < n_digits*2; i++){
-  	special_panes_color[i] = CRGB(0,0,0);
-  }
+   for(uint16_t i = 0; i < n_digits*2; i++){
+  	   special_panes_color[i] = CRGB(0,0,0);
+   }
 #endif
   
-  for(uint16_t i = 0; i < n_digits; i++){
-     cur_digits[i] = 0;
-     cur_col_on[i] = CRGB(222,222,222);
-     cur_col_off[i] = CRGB(2,6,0);
-  }
+   for(uint16_t i = 0; i < n_digits; i++){
+       cur_digits[i] = 0;
+       cur_col_on[i] = CRGB(222,222,222);
+       cur_col_off[i] = CRGB(2,6,0);
+   }
   
-  build_controller(pin);
+   build_controller(pin);
 }
 
 void ULixie::setDiamex(uint8_t n_digits) {
-  leds_per_digit = 10;
-  reverse_string = 1;
-  n_LEDs = n_digits * leds_per_digit;
-  for (uint16_t i = 0; i< leds_per_digit; i++) {
-     led_assignments[i] = led_assignments_diamex[i];
-     x_offsets[i] = 0;
-  }
-  for (uint16_t i = 0; i < n_LEDs; i++) {
-    led_mask_0[i] = 0;
-    led_mask_1[i] = 0;
+   leds_per_digit = 10;
+   reverse_string = 1;
+   n_LEDs = n_digits * leds_per_digit;
+   for (uint16_t i = 0; i< leds_per_digit; i++) {
+       led_assignments[i] = led_assignments_diamex[i];
+       x_offsets[i] = 0;
+   }
+   for (uint16_t i = 0; i < n_LEDs; i++) {
+       led_mask_0[i] = 0;
+       led_mask_1[i] = 0;
     
-    col_on[i] = CRGB(111,111,111);
-    col_off[i] = CRGB(6,0,3);
-  }
-  for(uint16_t i = 0; i < n_digits; i++){
-     cur_digits[i] = 0;
-     cur_col_on[i] = CRGB(111,111,111);
-     cur_col_off[i] = CRGB(6,0,3);
-  }
+       col_on[i] = CRGB(111,111,111);
+       col_off[i] = CRGB(6,0,3);
+   }
+   for(uint16_t i = 0; i < n_digits; i++){
+       cur_digits[i] = 0;
+       cur_col_on[i] = CRGB(111,111,111);
+       cur_col_off[i] = CRGB(6,0,3);
+   }
 }
 
 void ULixie::build_controller(const uint8_t pin){
-  //FastLED control pin has to be defined as a constant, (not just const, it's weird) this is a hacky workaround.
-  // Also, this stops you from defining non existent pins with your current board architecture
-  if (pin == 0)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 0, COLOR_ORDER>(lix_leds, n_LEDs);
-  else if (pin == 2)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 2, COLOR_ORDER>(lix_leds, n_LEDs);
-  else if (pin == 4)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 4, COLOR_ORDER>(lix_leds, n_LEDs);
-  else if (pin == 5)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 5, COLOR_ORDER>(lix_leds, n_LEDs);
-  else if (pin == 12)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 12, COLOR_ORDER>(lix_leds, n_LEDs);
-  else if (pin == 13)
-    lix_controller = &FastLED.addLeds<LED_TYPE, 13, COLOR_ORDER>(lix_leds, n_LEDs);
-    //FastLED.addLeds<LED_TYPE, 13, COLOR_ORDER>(lix_leds, n_LEDs);
+   //FastLED control pin has to be defined as a constant, (not just const, it's weird) this is a hacky workaround.
+   // Also, this stops you from defining non existent pins with your current board architecture
+   if (pin == 0)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 0, COLOR_ORDER>(lix_leds, n_LEDs);
+   else if (pin == 2)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 2, COLOR_ORDER>(lix_leds, n_LEDs);
+   else if (pin == 4)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 4, COLOR_ORDER>(lix_leds, n_LEDs);
+   else if (pin == 5)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 5, COLOR_ORDER>(lix_leds, n_LEDs);
+   else if (pin == 12)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 12, COLOR_ORDER>(lix_leds, n_LEDs);
+   else if (pin == 13)
+     lix_controller = &FastLED.addLeds<LED_TYPE, 13, COLOR_ORDER>(lix_leds, n_LEDs);
+     //FastLED.addLeds<LED_TYPE, 13, COLOR_ORDER>(lix_leds, n_LEDs);
 }
 
 void ULixie::begin(){
-  max_power(5,1200); // Default for the safety of your PC USB
-  start_animation();
+   max_power(5,1200); // Default for the safety of your PC USB
+   start_animation();
 }
 
 void ULixie::max_power(uint8_t V, uint16_t mA){
-  FastLED.setMaxPowerInVoltsAndMilliamps(V, mA);
+   FastLED.setMaxPowerInVoltsAndMilliamps(V, mA);
 }
 
 void ULixie::clear_all(){
@@ -488,98 +426,98 @@ void ULixie::clear_all(){
 //      led_mask_1[i] = 0;
 //    }
 //  }
-  for(uint16_t i = 0; i < n_digits; i++) {
-     led_mask_0[i] = 0;
-     led_mask_1[i] = 0;
-  }
-  current_mask = 0;
+   for(uint16_t i = 0; i < n_digits; i++) {
+       led_mask_0[i] = 0;
+       led_mask_1[i] = 0;
+   }
+   current_mask = 0;
 
 #ifdef PANE11
-  for(uint16_t i = 0; i < n_digits*2; i++){
-  	special_panes_color[i] = CRGB(0,0,0);
-  }
+   for(uint16_t i = 0; i < n_digits*2; i++){
+  	   special_panes_color[i] = CRGB(0,0,0);
+   }
 #endif
 
-  for(uint16_t i = 0; i < n_digits; i++){
-     cur_digits[i] = 128; // fill with spaces;
-  }
+   for(uint16_t i = 0; i < n_digits; i++){
+       cur_digits[i] = 128; // fill with spaces;
+   }
 }
 
 
 CRGB * ULixie::readColLayer(uint8_t layer){
-  CRGB * out = new CRGB[n_digits];
-  for (uint8_t i = 0; i < n_digits; i++) {
-    if (layer == ON) {
-         out[i] = cur_col_on[i];
-    } else if (layer == OFF) {
-         out[i] = cur_col_off[i];
-    } else { 
-         out[i] = CRGB(0,0,0);
-    }
-  }
-  return out;
+   CRGB * out = new CRGB[n_digits];
+   for (uint8_t i = 0; i < n_digits; i++) {
+       if (layer == ON) {
+           out[i] = cur_col_on[i];
+       } else if (layer == OFF) {
+           out[i] = cur_col_off[i];
+       } else { 
+           out[i] = CRGB(0,0,0);
+       }
+   }
+   return out;
 }
 
 uint8_t * ULixie::readIntValues() {
-  uint8_t * out = new uint8_t[n_digits];
-  for (uint8_t i = 0; i < n_digits; i++) {
-     if (cur_digits[i] < 10) {
-        out[i] = cur_digits[i];
-     } else if (cur_digits[i] == 128) {
-        out[i] = 128;
-     } else {  // digit is not number or space thus special pane
-        out[i] = 255;
-     }
+   uint8_t * out = new uint8_t[n_digits];
+   for (uint8_t i = 0; i < n_digits; i++) {
+       if (cur_digits[i] < 10) {
+           out[i] = cur_digits[i];
+       } else if (cur_digits[i] == 128) {
+           out[i] = 128;
+       } else {  // digit is not number or space thus special pane
+           out[i] = 255;
+       }
    }
    return out;
 }
 
 // char * ULixie::readCharValues() {
 String ULixie::readString() {
-  char * out = new char[n_digits+1];
-  out[n_digits] = char('\0'); // terminate string
-  for (uint8_t i = 0; i < n_digits; i++) {
-     if (cur_digits[i] < 10) {
-        out[i] = char(cur_digits[i]+48);
-     } else if (cur_digits[i] == 128) {
-        out[i] = ' ';
-     } else { // digit is not number or space thus special pane
-        out[i] = '.';
-     }
+   char * out = new char[n_digits+1];
+   out[n_digits] = char('\0'); // terminate string
+   for (uint8_t i = 0; i < n_digits; i++) {
+       if (cur_digits[i] < 10) {
+           out[i] = char(cur_digits[i]+48);
+       } else if (cur_digits[i] == 128) {
+           out[i] = ' ';
+       } else { // digit is not number or space thus special pane
+           out[i] = '.';
+       }
    }
    return out;
 }
 
 uint8_t ULixie::read_digit(uint8_t num) {
-     if (cur_digits[num] < 10) {
-        return cur_digits[num];
-     } else if (cur_digits[num] == 128) {
-        return 128;
-     } else {  // digit is not number or space thus special pane
-        return 255;
-     }
+   if (cur_digits[num] < 10) {
+       return cur_digits[num];
+   } else if (cur_digits[num] == 128) {
+       return 128;
+   } else {  // digit is not number or space thus special pane
+       return 255;
+   }
 }
 
 /* char ULixie::read_digitchar(uint8_t num) {
-     if (cur_digits[num] < 10) {
-        return cur_digits[num] + 48 ;
-     } else if (cur_digits[num] == 128) {
-        return ' ';
-     } else {  // digit is not number or space thus special pane
-        return '.';
-     }
+   if (cur_digits[num] < 10) {
+       return cur_digits[num] + 48 ;
+   } else if (cur_digits[num] == 128) {
+       return ' ';
+   } else {  // digit is not number or space thus special pane
+       return '.';
+   }
 }
 */
 
 void ULixie::write_digit(uint8_t digit, uint8_t num){
-  uint16_t start_index = leds_per_digit*digit;
-  if (!(digit < n_digits)) {
-     Serial.println("Digit more than lixies");
-     return;
-  }
-  if (reverse_string == 1) {
-     start_index = ((n_digits - digit) - 1) * leds_per_digit;;  
-  }  
+   uint16_t start_index = leds_per_digit*digit;
+   if (!(digit < n_digits)) {
+       Serial.println("Digit more than lixies");
+       return;
+   }
+   if (reverse_string == 1) {
+       start_index = ((n_digits - digit) - 1) * leds_per_digit;;  
+   }  
 //  clear_digit((n_digits - digit) - 1);
 //  for (uint16_t i = 0; i < leds_per_digit; i++) {
 //    if(current_mask == 0){
@@ -603,983 +541,367 @@ void ULixie::write_digit(uint8_t digit, uint8_t num){
 //     led_mask_1[i + start_index] = 0;
 //  }
 
-  for(uint8_t i = 0; i < leds_per_digit; i++){
-     led_mask_0[i+start_index] = 0;
-     led_mask_1[i+start_index] = 0;
-     if (current_mask == 1) {
-        if (led_assignments[i] == cur_digits[digit]) {
-           if (trans_type != INSTANT) {
-              led_mask_1[i+start_index] = 255;
+   for(uint8_t i = 0; i < leds_per_digit; i++){
+       led_mask_0[i+start_index] = 0;
+       led_mask_1[i+start_index] = 0;
+       if (current_mask == 1) {
+           if (led_assignments[i] == cur_digits[digit]) {
+               if (trans_type != INSTANT) {
+                   led_mask_1[i+start_index] = 255;
+               }
            }
-        }
-        if (num != 128) {
-           if (led_assignments[i] == num) {
-              led_mask_0[i+start_index] = 255;
+           if (num != 128) {
+               if (led_assignments[i] == num) {
+                   led_mask_0[i+start_index] = 255;
+               }
            }
-        }
-     } else {
-        if (led_assignments[i] == cur_digits[digit]) {
-           if (trans_type != INSTANT) {
-              led_mask_0[i+start_index] = 255;
+       } else {
+           if (led_assignments[i] == cur_digits[digit]) {
+               if (trans_type != INSTANT) {
+                   led_mask_0[i+start_index] = 255;
+               }
            }
-        }
-        if (num != 128) {
-           if (led_assignments[i] == num) {
-              led_mask_1[i+start_index] = 255;
+           if (num != 128) {
+               if (led_assignments[i] == num) {
+                   led_mask_1[i+start_index] = 255;
+               }
            }
-        }
-     }
-  }
-  cur_digits[digit] = num;
+       }
+   }
+   cur_digits[digit] = num;
 }
 
 void ULixie::clear_digit(uint8_t digit, uint8_t num){
 // should guard againt too large a value for 'num'
-  uint16_t start_index = leds_per_digit*digit;
-  if (reverse_string == 1) {
-     start_index = ((n_digits - digit) - 1) * leds_per_digit;;  
-  }
-  for(uint8_t i = 0; i < leds_per_digit; i++){
-     led_mask_0[i+start_index] = 0;
-     led_mask_1[i+start_index] = 0;
-     if (current_mask == 1) {
-        if (led_assignments[i] == cur_digits[digit]) {
-           if (trans_type != INSTANT) {
-              led_mask_1[i+start_index] = 255;
+   uint16_t start_index = leds_per_digit*digit;
+   if (reverse_string == 1) {
+       start_index = ((n_digits - digit) - 1) * leds_per_digit;;  
+   }
+   for(uint8_t i = 0; i < leds_per_digit; i++){
+       led_mask_0[i+start_index] = 0;
+       led_mask_1[i+start_index] = 0;
+       if (current_mask == 1) {
+           if (led_assignments[i] == cur_digits[digit]) {
+               if (trans_type != INSTANT) {
+                   led_mask_1[i+start_index] = 255;
+               }
            }
-        }
-     } else {
-        if (led_assignments[i] == cur_digits[digit]) {
-           if (trans_type != INSTANT) {
-              led_mask_0[i+start_index] = 255;
+       } else {
+           if (led_assignments[i] == cur_digits[digit]) {
+               if (trans_type != INSTANT) {
+                   led_mask_0[i+start_index] = 255;
+               }  
            }
-        }
-     }
-  }
-  cur_digits[digit] = 128;
+       }
+   }
+   cur_digits[digit] = 128;
 }
 
 void ULixie::special_pane(uint8_t index, bool enabled, CRGB col1, CRGB col2){
 #ifdef PANE11
-  if (reverse_string == 0) {
-        uint16_t start_index = index;
-        if (reverse_string == 1) {
+   if (reverse_string == 0) {
+       uint16_t start_index = index;
+       if (reverse_string == 1) {
            start_index = (n_digits - index) - 1;  
-        }
+       }
 	   special_panes_enabled[start_index] = enabled;
 
 	   if(enabled){
-		    if(col2.r != 0 || col2.g != 0 || col2.b != 0){ // use second color if defined
+           if(col2.r != 0 || col2.g != 0 || col2.b != 0){ // use second color if defined
 			     Serial.println("\n\n\nSPECIAL COL 2");
-   	       special_panes_color[(start_index*2)+1] = col1;
+   	           special_panes_color[(start_index*2)+1] = col1;
 		   	   special_panes_color[start_index*2]     = col2;
-		    } else { // if not, just use col1 for both special pane LEDs instead
+           } else { // if not, just use col1 for both special pane LEDs instead
 			     special_panes_color[(start_index*2)+1] = col1;
 			     special_panes_color[start_index*2]     = col1;
-		    }
+           }
 	   } else {
-		    special_panes_color[index*2+1] = CRGB(0,0,0);
-		    special_panes_color[index*2]   = CRGB(0,0,0);
+           special_panes_color[index*2+1] = CRGB(0,0,0);
+           special_panes_color[index*2]   = CRGB(0,0,0);
 	   }
    }
 #endif
 }
 
 void ULixie::color_all(uint8_t layer, CRGB col){
-  for(uint16_t i = 0; i < n_LEDs; i++){
-     if(layer == ON){
-       col_on[i] = col;
-     }
-     else if(layer == OFF){
-       col_off[i] = col;
-     }
-  }
-  for (uint8_t i = 0; i < n_digits; i++) {
-     if (layer == ON) {
-        cur_col_on[i] = col;
-     } else if (layer == OFF) {
-        cur_col_off[i] = col;
-     }
-  }
+   for(uint16_t i = 0; i < n_LEDs; i++){
+       if(layer == ON){
+           col_on[i] = col;
+       } else if(layer == OFF){
+           col_off[i] = col;
+       }
+   }
+   for (uint8_t i = 0; i < n_digits; i++) {
+       if (layer == ON) {
+           cur_col_on[i] = col;
+       } else if (layer == OFF) {
+           cur_col_off[i] = col;
+       }
+   }
 }
 
 void ULixie::color_all_dual(uint8_t layer, CRGB col_left, CRGB col_right){
-  bool side = 1;
-  for(uint16_t i = 0; i < n_LEDs; i++){
-    if(i % (leds_per_digit/2) == 0){
-      side = !side;
-    }
-    
-    if(layer == ON){
-      if(side){
-        col_on[i] = col_left;
-      }
-      else{
-        col_on[i] = col_right;
-      }
-    }
-    else if(layer == OFF){
-      if(side){
-        col_off[i] = col_left;
-      }
-      else{
-        col_off[i] = col_right;
-      }
-    }
-  }
-  for (uint8_t i = 0; i < n_digits; i++) {
-     if (layer == ON) {
-        cur_col_on[i] = col_left;
-     } else if (layer == OFF) {
-        cur_col_off[i] = col_left;
-     }
-  }
-  // this updta eof the color registers is not correct ! 
-  // but there is no alternative. Color register will be correct after
-  // an absolute call.
+   bool side = 1;
+   for(uint16_t i = 0; i < n_LEDs; i++){
+       if(i % (leds_per_digit/2) == 0){
+           side = !side;
+       }
+       if(layer == ON){
+           if(side){
+               col_on[i] = col_left;
+           } else{
+               col_on[i] = col_right;
+           }
+       } else if(layer == OFF){
+           if(side){
+               col_off[i] = col_left;
+           } else{
+               col_off[i] = col_right;
+           }
+       }
+   }
+   for (uint8_t i = 0; i < n_digits; i++) {
+       if (layer == ON) {
+           cur_col_on[i] = col_left;
+       } else if (layer == OFF) {
+           cur_col_off[i] = col_left;
+       }
+   }
+// this update of the color registers is not correct ! 
+// but there is no alternative. Color register will be correct after
+// an absolute call.
 }
 
 CRGB ULixie::get_color_display(uint8_t display, uint8_t layer){
-   if (layer == ON) {
-      return cur_col_on[display];
-   } else if (layer == OFF) {
-      return cur_col_off[display];
-   } else { 
-      return CRGB(0,0,0);
-   }  
+    if (layer == ON) {
+        return cur_col_on[display];
+    } else if (layer == OFF) {
+        return cur_col_off[display];
+    } else { 
+        return CRGB(0,0,0);
+    }  
 }
 
 void ULixie::color_display(uint8_t display, uint8_t layer, CRGB col){
-  uint16_t start_index = display*leds_per_digit;  
-  if (reverse_string == 1) {
-     start_index = (n_digits - display - 1)*leds_per_digit;  
-  }
-  for(uint16_t i = 0; i < leds_per_digit; i++){
-    if(layer == ON){
-      col_on[start_index+i] = col;
-    }
-    else if(layer == OFF){
-      col_off[start_index+i] = col;
-    }
-  }
-  if (reverse_string == 1) {
-    if (layer == ON){
-      cur_col_on[n_digits - display - 1] = col;
-    } else if (layer == OFF) {
-      cur_col_off[n_digits - display - 1] = col;
-    }
-  } else {
-    if (layer == ON) {
-      cur_col_on[display] = col;
-    } else if (layer == OFF) {
-      cur_col_off[display] = col;
-    }
-  } 
+   uint16_t start_index = display*leds_per_digit;  
+   if (reverse_string == 1) {
+       start_index = (n_digits - display - 1)*leds_per_digit;  
+   }
+   for(uint16_t i = 0; i < leds_per_digit; i++){
+       if(layer == ON){
+           col_on[start_index+i] = col;
+       } else if(layer == OFF){
+           col_off[start_index+i] = col;
+       }
+   }
+   if (reverse_string == 1) {
+       if (layer == ON){
+          cur_col_on[n_digits - display - 1] = col;
+       } else if (layer == OFF) {
+          cur_col_off[n_digits - display - 1] = col;
+       }
+   } else {
+       if (layer == ON) {
+          cur_col_on[display] = col;
+       } else if (layer == OFF) {
+          cur_col_off[display] = col;
+       }
+   } 
 }
 
 void ULixie::gradient_rgb(uint8_t layer, CRGB col_left, CRGB col_right){
-  for(uint16_t i = 0; i < n_LEDs; i++){
-    float progress = 1-(led_to_x_pos(i)/float(max_x_pos));
+   for(uint16_t i = 0; i < n_LEDs; i++){
+       float progress = 1-(led_to_x_pos(i)/float(max_x_pos));
 
-    CRGB col_out = CRGB(0,0,0);
-    col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
-    col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
-    col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
+       CRGB col_out = CRGB(0,0,0);
+       col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
+       col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
+       col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
     
-    if(layer == ON){
-      col_on[i] = col_out;
-    }
-    else if(layer == OFF){
-      col_off[i] = col_out;
-    }
-  }
-  for (uint8_t i = 0; i < n_digits; i++) {
-     float progress = 1-((i + 1) / float(n_digits + 1));
-     CRGB col_out = CRGB(0,0,0);
-     col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
-     col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
-     col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
-     if (layer == ON) {
-        cur_col_on[i] = col_out;
-     } else if (layer == OFF) {
-        cur_col_off[i] = col_out;
-     }
-  }
-  // this update eof the color registers is not correct ! 
-  // but there is no alternative. Color register will be correct after
-  // an absolute call.
+       if(layer == ON){
+           col_on[i] = col_out;
+       } else if(layer == OFF){
+           col_off[i] = col_out;
+       }
+   }
+   for (uint8_t i = 0; i < n_digits; i++) {
+       float progress = 1-((i + 1) / float(n_digits + 1));
+       CRGB col_out = CRGB(0,0,0);
+       col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
+       col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
+       col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
+       if (layer == ON) {
+           cur_col_on[i] = col_out;
+       } else if (layer == OFF) {
+           cur_col_off[i] = col_out;
+       }
+   }
+// this update eof the color registers is not correct ! 
+// but there is no alternative. Color register will be correct after
+// an absolute call.
 }
 
 void ULixie::brightness(float level){
-  //FastLED.setBrightness(255*level); // NOT SUPPORTED WITH CLEDCONTROLLER :(
-  bright = level; // We instead enforce brightness in the animation ISR
+//FastLED.setBrightness(255*level); // NOT SUPPORTED WITH CLEDCONTROLLER :(
+   bright = level; // We instead enforce brightness in the animation ISR
 }
 
 void ULixie::brightness(double level){
-  //FastLED.setBrightness(255*level); // NOT SUPPORTED WITH CLEDCONTROLLER :(
-  bright = level; // We instead enforce brightness in the animation ISR
+//FastLED.setBrightness(255*level); // NOT SUPPORTED WITH CLEDCONTROLLER :(
+   bright = level; // We instead enforce brightness in the animation ISR
 }
 
 void ULixie::fade_in(){
-  for(int16_t i = 0; i < 255; i++){
-    brightness(i/255.0);
-    FastLED.delay(1);
-  }
-  brightness(1.0);
+   for(int16_t i = 0; i < 255; i++){
+       brightness(i/255.0);
+       FastLED.delay(1);
+   }
+   brightness(1.0);
 }
 
 void ULixie::fade_out(){
-  for(int16_t i = 255; i > 0; i--){
-    brightness(i/255.0);
-    FastLED.delay(1);
-  }
-  brightness(0.0);
+   for(int16_t i = 255; i > 0; i--){
+       brightness(i/255.0);
+       FastLED.delay(1);
+   }
+   brightness(0.0);
 }
 
 void ULixie::streak(CRGB col, float pos, uint8_t blur){
-  float pos_whole = pos*n_digits*6; // 6 X-positions in a single display
+   float pos_whole = pos*n_digits*6; // 6 X-positions in a single display
   
-  for(uint16_t i = 0; i < n_LEDs; i++){
-    uint16_t pos_delta = abs(led_to_x_pos(i) - pos_whole);
-    if(pos_delta > blur){
-      pos_delta = blur;
-    }
-    float pos_level = 1-(pos_delta/float(blur));
+   for(uint16_t i = 0; i < n_LEDs; i++){
+       uint16_t pos_delta = abs(led_to_x_pos(i) - pos_whole);
+       if(pos_delta > blur){
+           pos_delta = blur;
+       }
+       float pos_level = 1-(pos_delta/float(blur));
     
-    pos_level *= pos_level; // Squared for sharper falloff
+       pos_level *= pos_level; // Squared for sharper falloff
     
-    lix_leds[i] = CRGB(col.r * pos_level, col.g * pos_level, col.b * pos_level);
-  }
-  lix_controller->showLeds();
+       lix_leds[i] = CRGB(col.r * pos_level, col.g * pos_level, col.b * pos_level);
+   }
+   lix_controller->showLeds();
 }
 
 void ULixie::sweep_color(CRGB col, uint16_t speed, uint8_t blur, bool reverse){
-  stop_animation();
-  sweep_gradient(col, col, speed, blur, reverse);
-  start_animation();
+   stop_animation();
+   sweep_gradient(col, col, speed, blur, reverse);
+   start_animation();
 }
 
 void ULixie::sweep_gradient(CRGB col_left, CRGB col_right, uint16_t speed, uint8_t blur, bool reverse){
-  stop_animation();
+   stop_animation();
   
-  if(!reverse){
-    for(int16_t sweep_pos = (blur*-1); sweep_pos <= max_x_pos+(blur); sweep_pos++){
-      int16_t sweep_pos_fixed = sweep_pos;
-      if(sweep_pos < 0){
-        sweep_pos_fixed = 0;
-      }
-      if(sweep_pos > max_x_pos){
-        sweep_pos_fixed = max_x_pos;
-      }
-      float progress = 1-(sweep_pos_fixed/float(max_x_pos));
+   if(!reverse){
+       for(int16_t sweep_pos = (blur*-1); sweep_pos <= max_x_pos+(blur); sweep_pos++){
+           int16_t sweep_pos_fixed = sweep_pos;
+          if(sweep_pos < 0){
+              sweep_pos_fixed = 0;
+          }
+          if(sweep_pos > max_x_pos){
+              sweep_pos_fixed = max_x_pos;
+          }
+          float progress = 1-(sweep_pos_fixed/float(max_x_pos));
 
-      CRGB col_out = CRGB(0,0,0);
-      col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
-      col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
-      col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
+          CRGB col_out = CRGB(0,0,0);
+          col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
+          col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
+          col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
+         
+          streak(col_out, 1-progress, blur);
+          FastLED.delay(speed);
+       }
+   } else {
+       for(int16_t sweep_pos = max_x_pos+(blur); sweep_pos >= (blur*-1); sweep_pos--){
+          int16_t sweep_pos_fixed = sweep_pos;
+          if(sweep_pos < 0){
+               sweep_pos_fixed = 0;
+          }
+          if(sweep_pos > max_x_pos){
+               sweep_pos_fixed = max_x_pos;
+          }
+          float progress = 1-(sweep_pos_fixed/float(max_x_pos));
+
+          CRGB col_out = CRGB(0,0,0);
+          col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
+          col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
+          col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
       
-      streak(col_out, 1-progress, blur);
-      FastLED.delay(speed);
-    }
-  }
-  else{
-    for(int16_t sweep_pos = max_x_pos+(blur); sweep_pos >= (blur*-1); sweep_pos--){
-      int16_t sweep_pos_fixed = sweep_pos;
-      if(sweep_pos < 0){
-        sweep_pos_fixed = 0;
-      }
-      if(sweep_pos > max_x_pos){
-        sweep_pos_fixed = max_x_pos;
-      }
-      float progress = 1-(sweep_pos_fixed/float(max_x_pos));
-
-      CRGB col_out = CRGB(0,0,0);
-      col_out.r = (col_right.r*(1-progress)) + (col_left.r*(progress));
-      col_out.g = (col_right.g*(1-progress)) + (col_left.g*(progress));
-      col_out.b = (col_right.b*(1-progress)) + (col_left.b*(progress));
-      
-      streak(col_out, progress, blur);
-      FastLED.delay(speed);
-    }
-  }
-  start_animation();
-}
-
-uint8_t ULixie::get_size(uint32_t input){
-  uint8_t places = 1;
-  while(input > 9){
-    places++;
-    input /= 10;
-  }
-  return places;
+          streak(col_out, progress, blur);
+          FastLED.delay(speed);
+       }
+   }
+   start_animation();
 }
 
 void ULixie::nixie(){
-  color_all(ON, CRGB(255, 70, 7));
-  color_all(OFF, CRGB(0, 3, 8));  
+   color_all(ON, CRGB(255, 70, 7));
+   color_all(OFF, CRGB(0, 3, 8));  
 }
 
 void ULixie::white_balance(CRGB c_adj){
-  lix_controller->setTemperature(c_adj);
+   lix_controller->setTemperature(c_adj);
 }
 
 void ULixie::rainbow(uint8_t r_hue, uint8_t r_sep){
-  for(uint8_t i = 0; i < n_digits; i++){
-    color_display(i, ON, CHSV(r_hue,255,255));
-    r_hue+=r_sep;
-  }
+   for(uint8_t i = 0; i < n_digits; i++){
+       color_display(i, ON, CHSV(r_hue,255,255));
+       r_hue+=r_sep;
+   }
 }
 
 void ULixie::clear(bool show_change){
-  clear_all();
-  if(show_change){
-    mask_update();
-  }
+   clear_all();
+   if(show_change){
+       mask_update();
+   }
 }
 
 void ULixie::clear_digit(uint8_t index, bool show_change){
-  clear_digit(index);
-  if(show_change) {
-    mask_update();
-  }
+   clear_digit(index);
+   if(show_change) {
+       mask_update();
+   }
 }
+
+void ULixie::mask_update(){
+// mask_fader = 0.0;
+  
+//  if(trans_type == INSTANT){
+//    mask_push = 1.0;
+//  }
+//  else{
+//    float trans_multiplier = float(trans_time) / float(1000.0);
+//   mask_push = (float) 1.0 / float(50.0 * trans_multiplier);
+//  }
+   mask_fade_finished = false;
+   t_lastmaskupdate = millis();
+}
+
+void ULixie::mask_toggle() {
+//    if(current_mask == 0){
+//      current_mask = 1;
+//    } else if(current_mask == 1){
+//       current_mask = 0;
+//    }
+   mask_update();
+   animate();
+//     wait();
+}
+
+
+void ULixie::run(){
+   animate();
+}
+
+void ULixie::wait(){
+   while(mask_fade_finished == false) {
+      animate();
+   }
+}
+
 
 void ULixie::show(){
-  mask_update();
-}
-
-// BEGIN DIGIT WRITE FUNCTIONS
-
-bool char_is_number(char input){
-  if(input <= 57 && input >= 48) // if equal to or between ASCII '0' and '9'
-    return true;
-  else
-    return false;
-}
-
-void input_to_digits(uint8_t * pdigits, uint8_t * ndigits, String input) {
-    uint8_t i;
-    for (i = 0; i < n_digits; i++) {
-       if (i < input.length()) {
-          char c = input.charAt(i);
-          if (char_is_number(c)) {
-             ndigits[n_digits - i - 1] = c - '0';
-          } else if (c == ' ') {
-             ndigits[n_digits - i - 1] = 128;
-          } else {
-             ndigits[n_digits - i - 1] = 255;
-          }
-       } else {
-          ndigits[n_digits - i - 1] = 128; //pad with spaces
-       }
-       if (cur_digits[i] < 10) {
-          pdigits[i] = cur_digits[i];
-       } else if (cur_digits[i] == 128) {
-          pdigits[i] = 128;
-       } else {  // digit is not number or space thus special pane
-          pdigits[i] = 255;
-       }
-    }      
-}
-
-void ULixie::integer_to_digits(char *outbuf, int32_t input) {
-/*
- *  can handle positive numbers and negative numbers.
- *  If a negative number is passed, the result will be prepended with an extra zero
- *  to denote the minus sign.
- *  if the value is 'out of bounds' the value is passed to the floatplus()
- *  function (which can handle bigger absolute values).
- *  If (left side) padding is needed, it will be with spaces.
- */
-    char * next_digits;
-    uint8_t i, z;
-    int32_t n_place, absinput;
-    char num; 
-    
-    next_digits = new char[n_digits];
-    
-    z = 0;
-    absinput = input;
-    if (input < 0) absinput = (0 - input);
-
-//  if numbers are too big pass them to write_floatplus
-    if (input < -99999) {
-       float_to_digits(next_digits,(float) input, 1);
-       return;
-    } else if (input > 999999) {
-       float_to_digits(next_digits,(float) input, 1);
-       return;
-    } else if (absinput == 0) {
-       next_digits = "     0";
-    } else {
-      n_place = 100000;
-      for (i = 0; i < n_digits; i++) {
-         num = (char)(absinput / n_place) + 48;
-         if ((z == i) && (num == 48)) {
-            num = ' ';
-            z++;
-         }  else if (input < 0) {
-            if ((z > 0) && (z == i)) {
-               next_digits[i - 1] = '0';
-            } else {
-               // this should only happen if input between -10000 and -99999
-            }
-         }
-         next_digits[i] = num;
-         absinput = absinput % n_place;
-         n_place = n_place / 10;
-       }
-    }
-    for (i = 0; i < n_digits; i++) {
-        outbuf[i] = next_digits[i];
-    }
-    free(next_digits);
-}
-
-void ULixie::floatold_to_digits(char * outbuf,float input_raw, uint8_t dec_places) {
-  char * next_digits;
-  uint8_t comma = 0, i = 0;
-    
-  next_digits = new char[n_digits];
-  char * buf = new char[20];
-  sprintf(buf,"%6.4f",input_raw);
-  comma = 0;
-  for (i = 0; i < n_digits; i++) {
-    next_digits[i] = ' ';
-  }
-  for (i = 0; i < n_digits; i++) {
-    if (char_is_number(buf[i]) == true) {
-       for (uint8_t j = 0; j < n_digits -1; j++) {
-         next_digits[j] = next_digits[j+1];
-       }
-       next_digits[n_digits - 1] = buf[i];
-       if (comma == i) comma++;
-       if ((i - comma) > (dec_places - 1)) break;
-    } else if (buf[i] == '.' ) {
-       if (comma == 0) {
-          // due to formatting the comma cannot be in position zero.
-       }
-       if (comma > (n_digits-2)) {
-          // special case when the comma would be in last position. 
-          // the front lixie will be cleared.
-          break;
-       } else {
-          for (uint8_t j = 0; j < n_digits -1; j++) {
-             next_digits[j] = next_digits[j+1];
-          }
-          next_digits[n_digits - 1] = ' ';
-       }
-    } else if (buf[i] == 'e' ) {
-       // do nothing, an exception, ignore the exponent for so long       
-       break;
-    } 
-  }
-  for (i = 0; i < n_digits; i++) {
-    outbuf[i] = next_digits[i];
-  }
-  free(next_digits);
-  free(buf);
-}   
-
-void ULixie::float_to_digits(char *buf, float input_raw, uint16_t dec_places) {
-/*  
-  Write_floatplus() displays the input as follows:
-  Note: this assumes there is no special pane containing a '.';
-  Also it uses an extra leading zero for the minus sign.
-  If (left side) padding is needed it wil be spaces.
-  
-  if input between 0 and 1e-09: ERROR. display is "     0".
-  if input between 1e-09 and 0.000001: leading zero, 3 significant in dimmed color, 
-                                       a zero and the (single digit) exponent 
-  if input between 0.000001 and 1: leading zero and 5 decimals in dimmed color.
-  if input between 1 and 10: leading digit plus 5 decimals in dimmed color.
-  if input between 10 and 100: 2 leading digits plus 4 decimals in dimmed color.
-  ...
-  if input between 10000 and 100000: 5 leading digits plus one decimal in dimmed color.
-  if input between 100000 and 1000000: 6 leading digits.
-  if input between 1e06 and 1e10: one leading digit, next 4 leading digits in dimmed color
-                                one digits for the exponent in the normal color.
-  if input between 1e10 and 1e100: one leading digit, next 3 leading digits in dimmed color
-                                two digits for the exponen in the normal color.
-  if input bigger than 1e100 (a googol): ERROR. 
-                                Display "999999" with the 9s in position 2-3-4 dimmed
-  if input == 0: displays ("000000") with positions 2-3-4-5-6 dimmed
-  if input between 0 and -1e-09: ERROR. display is "     0".
-  if input between -1e-09 and -1e-04: 2 zeros, 2 dimmed significant decimals, 
-                                      a zero and the (single digit) negative exponent 
-  if input between -0.0001 and -1: 2 zeros plus 4 dimmed decimals.
-  if input between -1 and -10: a zero, the leading digit plus 4 dimmed decimals.
-  if input between -10 and -100: a zero, 2 leading digits plus 3 dimmed decimals.
-  ...
-  if input between -1000 and -10000: a zero, 4 leading digits plus 1 dimmed decimal.
-  if input between -10000 and -100000: a zero and 5 leading digits.
-  if input between -1e05 and -1e10: a zero, one leading digit, 3 dimmed decimals,
-                                one digits for the exponent (not dimmed).
-  if input between -1e10 and -1e100: a zero, one leading digit, 2 dimmed decimals,
-                                two digits for the exponent (not dimmed).
-  if inptu smaller than -1e100 (a googol): ERROR. 
-                                Display "099999" with the 9s in position 3-4 dimmed
-  if input == 0: 
-  if input between -0.000001 and -1:
-
-  The argumment color is chosen for the color the lixies will light up. If a lixie is to be dimmed, 
-  (r,g,b) values of the color are divided by 4.
-*/
-
-  char * next_digits;
-  int16_t digitspushed = 0;
-  uint8_t comma = 0, i = 0, exponent = 0;
-  
-  next_digits = new char[n_digits+1];
-//  char * buf = new char[20];
-
-  for (uint8_t i = 0; i<20; i++) buf[i] = ':';
-  for (uint8_t i = 0; i < n_digits; i++) next_digits[i] = ' ';
-  next_digits[n_digits] = '\0';
-  sprintf(buf,"%6.5f",input_raw);
-
-  // error conditions
-  if (input_raw > 1000000) sprintf(buf,"%4.3e",input_raw);
-  if (input_raw < -100000) sprintf(buf,"%4.3e",input_raw); 
-  if ((input_raw > 0) && (input_raw < 0.001)) sprintf(buf,"%4.3e",input_raw); 
-  if ((input_raw < 0) && (input_raw > -0.01)) sprintf(buf,"%4.3e",input_raw);
-  if ((input_raw > 1e34) ||
-      (input_raw < -1e34) ||
-      ((input_raw > 0) && (input_raw < 1e-09)) ||
-      ((input_raw < 0) && (input_raw > -1e-09)) ||
-      (buf[1] > 57)) {
-         // error conditions, if buf now contains 'inf' or -inf' that is also an error
-         for (uint8_t j = 0; j < n_digits; j++) {
-            next_digits[j] = '9' - 10;
-            if ((j == 2) || (j == 3)) {
-               next_digits[j] = '9';;
-            }
-         }
-         write(next_digits);
-         free(buf);
-         free(next_digits);
-         return;  
-  }
-  comma = 0;
-  digitspushed = 0;
-  for (i = 0; i < strlen(buf); i++) {
-    switch (buf[i]) {
-    case ' ' :
-       break;
-    case '+' :
-       if (exponent == 1) {
-          // there may be a + sign after the exponent sign. discard it.
-       } else if (exponent == 0) {
-          // ther may be a plus sign as first character, should not happen
-       }
-       break;
-    case '-' :
-       if (digitspushed < (n_digits)) {
-          if ((digitspushed - comma) < dec_places) {
-             for (uint8_t j = 0; j < n_digits -1; j++) {
-                next_digits[j] = next_digits[j+1];
-             }
-             next_digits[n_digits - 1] = buf[i];
-             digitspushed++;
-             if (comma == i) {
-                comma++;
-             }
-          }
-       }
-          // first minus sign for negative values ******
-          // prepend a zero to denote minus
-          // this zero will always be the first number in the output
-       if (exponent == 0) {
-           next_digits[n_digits - 1] = '0';
-       } else if (exponent == 1) {      
-           exponent = 2;    
-           next_digits[n_digits - 1] = '0';  
-       } 
-       break;
-    case '.' :
-       if (comma == 0) {
-          break;
-          // this should not happen, due to the formatting comma cannot in pistion zero
-       }
-       if (comma > (n_digits-1)) {
-          break;          // do not push anything if comma would be in last postion
-       }
-       if (comma > (n_digits-2)) {
-          // special case when the comma would be in last position.
-          // we can now squeeze an extra decimal in 
-       }
-       break;
-    case 'e' :
-       // exponent character.;
-       exponent = 1;
-       break;
-    case '0' :
-       if (exponent > 0) {
-          // drop this leading zero for the exponent
-          break;
-       }
-    default  :
-       if (char_is_number(buf[i]) == true) {
-          // numbers are pushed into the output
-           if (digitspushed < (n_digits)) {
-              if ((digitspushed - comma) < dec_places) {
-                 for (uint8_t j = 0; j < n_digits -1; j++) {
-                   next_digits[j] = next_digits[j+1];
-                 }
-                 next_digits[n_digits - 1] = buf[i];
-                 digitspushed++;
-                 if (comma == i) {
-                    comma++;
-                 }
-                 if (exponent > 0) {
-                    exponent++;
-                 }
-              }
-           } else if (exponent > 1) {
-              // exponent of 2 digits, hard on te last two lixies (pos. 0 and 1).
-              next_digits[n_digits - 2] = next_digits[n_digits -1];
-              next_digits[n_digits - 1] = buf[i];
-              exponent++;
-           } else if ((exponent == 1) && (buf[i] > 48)) {
-              // exponent of 1 digit, hard on the last lixie (only if not a zero).
-              next_digits[n_digits - 1] = buf[i];
-              exponent++; 
-           }
-        }
-        // anything else (like spaces) is discarded
-     }
-  }
-  for (uint8_t j = 0; j < n_digits; j++) {
-    buf[i] = next_digits[i];
-    if (j+1 < exponent) {
-       if (char_is_number(next_digits[j]) == true) buf[j] = next_digits[j] + 10;
-    } else if ((j+1) > (digitspushed - comma)) {
-        // do nothing -- buf[j] = next_digits[j];             
-    } else {
-       if (char_is_number(next_digits[j]) == true) buf[j] = next_digits[j] - 10;
-    }
-  }
-//  free(buf);
-  free(next_digits);
-}   
-
-void ULixie::write(uint32_t input) {
-    char * next_digits;
-    next_digits = new char[n_digits];
-    integer_to_digits(next_digits, (int32_t) input);
-    write(next_digits);
-    free(next_digits);
-}
-
-void ULixie::write(int32_t input){
-    char * next_digits;
-    next_digits = new char[n_digits];
-    integer_to_digits(next_digits, input);
-    write(next_digits);
-    free(next_digits);
-}
-
-void ULixie::write_float(float input_raw, uint8_t dec_places) {
-    char * next_digits;
-    char num;
-    CRGB col;
-    next_digits = new char[n_digits];
-    float_to_digits(next_digits, input_raw, dec_places);
-    for (uint8_t j = 0; j < n_digits; j++) {
-       col = get_color_display(j,ON);
-       num = next_digits[j];
-       if ((char_is_number(next_digits[j]) == true)) {
-           color_display(j,ON, col);
-           next_digits[j] = num;
-       } else if ((char_is_number(next_digits[j]-10) == true)) {
-           color_display(j,ON,CRGB(col.b/4,col.g/4,col.r/4));
-           next_digits[j] = num + 10;
-       } else if ((char_is_number(next_digits[j]+10) == true)) {
-           color_display(j,ON,col);
-           next_digits[j] = num - 10;
-       } else {
-           color_display(j,ON,col);
-           next_digits[j] = num;
-       }
-    }  
-    write(next_digits);
-    free(next_digits);
-}
-
-void ULixie::write_floatplus(float input_raw, CRGB col) {
-    char * next_digits;
-    char num;
-    next_digits = new char[n_digits];
-    float_to_digits(next_digits, input_raw, 5);
-    for (uint8_t j = 0; j < n_digits; j++) {
-       num = next_digits[j];
-       if ((char_is_number(next_digits[j]) == true)) {
-           color_display(j,ON, col);
-           next_digits[j] = num;
-       } else  if ((char_is_number(next_digits[j]-10) == true)) {
-           color_display(j,ON,CRGB(col.b/4,col.g/4,col.r/4));
-           next_digits[j] = num + 10;
-       } else if ((char_is_number(next_digits[j]+10) == true)) {
-           color_display(j,ON,col);
-           next_digits[j] = num - 10;
-       } else {
-           color_display(j,ON,col);
-           next_digits[j] = num;
-       }
-    }  
-    write(next_digits);
-    free(next_digits);
-}
-
-void ULixie::push_digit(uint8_t number) {
-  // 0-9 are rendered normally when passed in, 
-  // but 128 = blank display & 255 = special pane  
-  // If multiple displays, move all LED states forward one
-  
-if (reverse_string == 1) {
-  if (n_digits > 1) {
-    for (uint16_t i = 0; i < (n_LEDs - leds_per_digit); i++) {
-      if(current_mask == 0){
-        led_mask_0[i] = led_mask_0[i + leds_per_digit];
-      } else{
-        led_mask_1[i] = led_mask_1[i + leds_per_digit];
-      }
-    }
-  }
-  // Clear the LED states for the first display
-  for (uint16_t i = 0; i < leds_per_digit; i++) {
-    if(current_mask == 0){
-      led_mask_0[(n_LEDs-1) - i] = led_mask_0[(n_LEDs-leds_per_digit-1)- i];
-    } else {
-      led_mask_1[(n_LEDs-1) - i] = led_mask_1[(n_LEDs-leds_per_digit-1) - i];
-    }
-  }  
-  if(number != 128){
-    for(uint8_t i = 0; i < leds_per_digit; i++){
-      if(led_assignments[i] == number){
-        if(current_mask == 0){
-          led_mask_0[(n_LEDs - leds_per_digit) + i] = 255;
-        } else {
-          led_mask_1[(n_LEDs - leds_per_digit) + i] = 255;
-        }
-      } else {
-        if(current_mask == 0){
-          led_mask_0[(n_LEDs - leds_per_digit) + i] = 0;
-        } else {
-          led_mask_1[(n_LEDs - leds_per_digit) + i] = 0;
-        }
-      }
-    }
-  } else {
-    for(uint8_t i = 0; i < leds_per_digit; i++){
-      if(current_mask == 0){
-        led_mask_0[(n_LEDs - leds_per_digit) + i] = 0;
-      } else {
-        led_mask_1[(n_LEDs - leds_per_digit) + i] = 0;
-      }
-    }
-  }
-  for (uint8_t i = 0; i < n_digits - 1; i++) {
-    cur_digits[i] = cur_digits[i+1];
-    cur_col_on[i] = cur_col_on[i+1];
-    cur_col_off[i] = cur_col_off[i+1];
-  }
-  cur_digits[n_digits-1] = number; 
-  cur_col_on[n_digits-1] = cur_col_on[n_digits -2];
-  cur_col_off[n_digits-1] = cur_col_off[n_digits -2];
-   
-} else { // reverse_string = 0.....
-
-  // 0-9 are rendered normally when passed in, 
-  // but 128 = blank display & 255 = special pane 
-  // If multiple displays, move all LED states forward one
-  if (n_digits > 1) {
-    for (uint16_t i = n_LEDs - 1; i >= leds_per_digit; i--) {
-      if(current_mask == 0){
-        led_mask_0[i] = led_mask_0[i - leds_per_digit];
-      } else{
-        led_mask_1[i] = led_mask_1[i - leds_per_digit];
-      }
-    }
-  }  
-  // Clear the LED states for the first display
-  for (uint16_t i = 0; i < leds_per_digit; i++) {
-    if(current_mask == 0){
-      led_mask_0[i] = led_mask_0[i - leds_per_digit];
-    } else {
-      led_mask_1[i] = led_mask_1[i - leds_per_digit];
-    }
-  }
-  if(number != 128){
-    for(uint8_t i = 0; i < leds_per_digit; i++){
-      if(led_assignments[i] == number){
-        if(current_mask == 0){
-          led_mask_0[i] = 255;
-        } else {
-          led_mask_1[i] = 255;
-        }
-      } else {
-        if(current_mask == 0){
-          led_mask_0[i] = 0;
-        } else {
-          led_mask_1[i] = 0;
-        }
-      }
-    }
-  } else {
-    for(uint8_t i = 0; i < leds_per_digit; i++){
-      if(current_mask == 0){
-        led_mask_0[i] = 0;
-      } else {
-        led_mask_1[i] = 0;
-      }
-    }
-  }
-  for (uint8_t i = n_digits -1; i > 0; i--) {
-     cur_digits[i] = cur_digits[i-1];
-     cur_col_on[i] = cur_col_on[i-1];
-     cur_col_off[i] = cur_col_off[i-1];
-  }
-  cur_digits[0] = number;
-  cur_col_on[0] = cur_col_on[1];
-  cur_col_off[0] = cur_col_off[1];
-
-// 
-} // endif for if (reverse_string == 0)
-}
-
-void ULixie::write(String input){
-  switch(get_trans_effect()) {
-    case INSTANT: write_instant(input); break;
-    case BLINKER: write_blinker(input); break;
-    case SCROLLLEFT: write_scroll(input, LEFTRIGHT); break;
-    case SCROLLFLAPLEFT: write_scrollflap(input,LEFTRIGHT); break;
-    case ONEBYONELEFT: write_onebyone(input, LEFTRIGHT); break;
-    case SCROLLRIGHT: write_scroll(input, RIGHTLEFT); break;
-    case SCROLLFLAPRIGHT: write_scrollflap(input,RIGHTLEFT); break;
-    case ONEBYONERIGHT: write_onebyone(input, RIGHTLEFT); break;
-    case GASPUMP: write_gaspump(input); break;
-    case PINBALL: write_pinball(input); break;
-    case SLOTMACHINE: write_slotmachine(input); break;
-    case SLOTIIMACHINE: write_slotiimachine(input); break;
-    default: 
-    write_instant(input); 
-    break; 
-  }
-}
-
-
-
-// BEGIN LIXIE 1 DEPRECATED FUNCTIONS
-
-void ULixie::brightness(uint8_t b){
-  brightness( b/255.0 ); // Forward to newer float function
-}
-
-void ULixie::write_flip(uint32_t input, uint16_t flip_time, uint8_t flip_speed){
-  // This animation no longer supported, crossfade is used instead
-  transition_type(CROSSFADE);
-  transition_time(flip_time);
-  write(input);
-}
-
-void ULixie::write_fade(uint32_t input, uint16_t fade_time){
-  transition_type(CROSSFADE);
-  transition_time(fade_time);
-  write(input);
-}
-
-void ULixie::sweep(CRGB col, uint8_t speed){
-  sweep_color(col, speed, 3, false);
-}
-
-void ULixie::progress(float percent, CRGB col1, CRGB col2){
-  uint16_t crossover_whole = percent * n_digits;
-  for(uint8_t i = 0; i < n_digits; i++){
-    if(n_digits-i-1 > crossover_whole){
-      color_display(n_digits-i-1, ON, col1);
-      color_display(n_digits-i-1, OFF, col1);
-    }
-    else{
-      color_display(n_digits-i-1, ON, col2);
-      color_display(n_digits-i-1, OFF, col2);
-    }
-  }
-}
-
-void ULixie::fill_fade_in(CRGB col, uint8_t fade_speed){
-  for(float fade = 0.0; fade < 1.0; fade += 0.05){
-    for(uint16_t i = 0; i < n_LEDs; i++){
-      lix_leds[i].r = col.r*fade;
-      lix_leds[i].g = col.g*fade;
-      lix_leds[i].b = col.b*fade;
-    }
-    
-    FastLED.show();
-    delay(fade_speed);
-  }
-}
-
-void ULixie::fill_fade_out(CRGB col, uint8_t fade_speed){
-  for(float fade = 1; fade > 0; fade -= 0.05){
-    for(uint16_t i = 0; i < n_LEDs; i++){
-      lix_leds[i].r = col.r*fade;
-      lix_leds[i].g = col.g*fade;
-      lix_leds[i].b = col.b*fade;
-    }
-    
-    FastLED.show();
-    delay(fade_speed);
-  }
-}
-
-void ULixie::color(uint8_t r, uint8_t g, uint8_t b){
-  color_all(ON,CRGB(r,g,b));
-}
-void ULixie::color(CRGB c){
-  color_all(ON,c);
-}
-void ULixie::color(uint8_t r, uint8_t g, uint8_t b, uint8_t index){
-  color_display(index, ON, CRGB(r,g,b));
-}
-void ULixie::color(CRGB c, uint8_t index){
-  color_display(index, ON, c);
-}
-void ULixie::color_off(uint8_t r, uint8_t g, uint8_t b){
-  color_all(OFF,CRGB(r,g,b));
-}
-void ULixie::color_off(CRGB c){
-  color_all(OFF,c);
-}
-void ULixie::color_off(uint8_t r, uint8_t g, uint8_t b, uint8_t index){
-  color_display(index, OFF, CRGB(r,g,b));
-}
-void ULixie::color_off(CRGB c, uint8_t index){
-  color_display(index, OFF, c);
-}
-
-void ULixie::color_fade(CRGB col, uint16_t duration){
-  // not supported
-  color_all(ON,col);
-}
-void ULixie::color_fade(CRGB col, uint16_t duration, uint8_t index){
-  // not supported
-  color_display(index,ON,col);
-}
-void ULixie::color_array_fade(CRGB *cols, uint16_t duration){
-  // support removed
-}
-void ULixie::color_array_fade(CHSV *cols, uint16_t duration){
-  // support removed
-}
-void ULixie::color_wipe(CRGB col1, CRGB col2){
-  gradient_rgb(ON,col1,col2);
-}
-void ULixie::nixie_mode(bool enabled, bool has_aura){
-  // enabled removed
-  // has_aura removed
-  nixie();
-}
-void ULixie::nixie_aura_intensity(uint8_t val){
-  // support removed
+   mask_update();
 }

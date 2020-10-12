@@ -8,7 +8,10 @@
     without any other effects. This effect is used a default when the 
     trans_effect variable contains a non described effect number. 
 */
+
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_instant(String input){
 
@@ -23,8 +26,6 @@ void ULixie::write_instant(String input){
     uint8_t reelsstopped;
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
-
-    uint8_t n_digits = get_n_digits();
 
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];

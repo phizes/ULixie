@@ -11,7 +11,9 @@
    - trans_time will indicate the dropping speed.
 */     
 
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_onebyone(String input, uint8_t dir){
 
@@ -27,8 +29,6 @@ void ULixie::write_onebyone(String input, uint8_t dir){
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
     
-    uint8_t n_digits = get_n_digits();
-    
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
     delay_times = new uint32_t[n_digits];
@@ -41,7 +41,7 @@ void ULixie::write_onebyone(String input, uint8_t dir){
 
     i = 0;
     while (i < n_digits) {
-       if ((t_now - delaytime) > get_trans_time()) {
+       if ((t_now - delaytime) > trans_time) {
           if (dir = LEFTRIGHT) {
              write_digit(n_digits - 1 - i, next_digits[n_digits - 1 - i]);
           } else {

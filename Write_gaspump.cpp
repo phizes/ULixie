@@ -11,7 +11,10 @@
    the rest keeps spinning.
    - trans_time will indicate the spinning speed.
 */
+
+#ifndef ULixie_h
 #include "ULixie.h"
+#endif
 
 void ULixie::write_gaspump(String input){
 
@@ -27,8 +30,6 @@ void ULixie::write_gaspump(String input){
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
 
-    uint8_t n_digits = get_n_digits();
-    
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
     delay_times = new uint32_t[n_digits];
@@ -51,9 +52,9 @@ void ULixie::write_gaspump(String input){
     }
     num = 0;
     reelsstopped = 0;
-    t_now = millis() + get_trans_time() + 1;
+    t_now = millis() + trans_time + 1;
     while (reelsstopped < n_digits) {
-       if ((t_now - delay_times[reelsstopped]) > get_trans_time()) {
+       if ((t_now - delay_times[reelsstopped]) > trans_time) {
           digitwritten = 0;
           for (i = 0; i < n_digits; i++) {
              if (delay_index[i] < 20) {
