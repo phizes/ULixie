@@ -33,6 +33,8 @@
 
 #define ON  1
 #define OFF 0
+#define LEFTRIGHT 0
+#define RIGHTLEFT 1
 
 #define INSTANT   		          0
 #define CROSSFADE 		          1
@@ -79,7 +81,7 @@ class ULixie
 		void fade_in();
 		void fade_out();
 		void brightness(float level);
-	  void brightness(double level);
+  	    void brightness(double level);
 		void run();
 		void wait();
 		void streak(CRGB col, float pos, uint8_t blur);
@@ -93,19 +95,22 @@ class ULixie
     // ----------------------------------------------
 
     //.----------------------------------------------
-    // New specific Lixie_DIAMEX funtions
+    // New specific ULixie funtions
     // ----------------------------------------------
 
-    void write(int32_t input);
-    void transition_effect(uint16_t type);
-    CRGB get_color_display(uint8_t display, uint8_t layer);
-    CRGB * readColLayer(uint8_t layer);
-    uint8_t * readIntValues();
-    String readString();
-    uint8_t read_digit(uint8_t num);
-    void write_floatplus(float input, CRGB col);
-    void mask_toggle();
-        
+        void write(int32_t input); 
+        void transition_effect(uint16_t type);
+        CRGB get_color_display(uint8_t display, uint8_t layer);
+        CRGB * readColLayer(uint8_t layer);
+        uint8_t * readIntValues();
+        String readString();   
+        uint8_t read_digit(uint8_t num);
+        void write_floatplus(float input, CRGB col);
+        void mask_toggle();
+        void integer_to_digits(char * outbuf, int32_t input);
+        void floatold_to_digits(char * outbuf, float input, uint8 n_dec);
+        void float_to_digits(char *outbuf, float input, uint8_t n_dec);
+                
 		// ----------------------------------------------
 		// Deprecated Lixie 1 functions and overloads:
 		// ----------------------------------------------
@@ -137,7 +142,45 @@ class ULixie
 		void nixie_aura_intensity(uint8_t val);
 		
 	private:
-		uint8_t get_size(uint32_t input);
-};
+        uint8_t n_digits;           // number of Lixies in the string
+        uint16_t n_LEDs;            // total number of LEDs in the string
+        uint8_t leds_per_digit;     // number of LEDs per Lixie in the string
+        uint8_t reverse_string;     // 0: Most Significat Lixie at end of string
+                                    // 1: Most Significat Lixie at start of string
+        uint8_t *led_assignments;   // Order of panes in a Lixie
+        
+        uint8_t *cur_digits;        // Digits being displayed currently
+        CRGB *lix_leds;             // LED setting passed to FastLib library
+        CRGB *cur_col_on;           // Current ON (foreground) color
+        CRGB *cur_col_off;          // Current OFF (background) color
+        
+        uint8_t current_mask;       // do we fade from 0 to 1 or 1 to 0
+        uint8_t *led_mask_0;        // used in fading (mask=0 -> fade from)
+        uint8_t *led_mask_1;        // used in fading (mask=0 -> fade to)
+        
+        uint8_t trans_type;         // current transition type between two
+                                    // different displayed values on single
+                                    // lixie
+        uint8_t trans_effect;       // current transition effect between two
+                                    // different values on the whole string
+        uint32_t trans_time;        // time to execute trans_type or trans_effect
 
-#endif
+//		uint8_t get_size(uint32_t input);
+//		uint8_t get_n_digits();
+//		uint8_t get_trans_effect();
+//		uint32_t get_trans_time();
+		bool char_is_number(char input);
+		void input_to_digits(uint8_t * pdigits, uint8_t *ndigits, String input);
+
+        void write_instant(String input);
+        void write_blinker(String input);
+        void write_gaspump(String input);
+        void write_pinball(String input);
+        void write_slotmachine(String input);
+        void write_slotiimachine(String input);
+        void write_onebyone(String input, uint8_t dir);
+        void write_scroll(String input, uint8_t dir);
+        void write_scrollflap(String input, uint8_t dir);
+};    
+
+#endif /* ULixie_H */
