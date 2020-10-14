@@ -28,6 +28,9 @@ void ULixie::write_onebyone(String input, uint8_t dir){
     uint8_t reelsstopped;
     uint8_t oldtrans_type;
     uint32_t oldtrans_time;
+
+    uint8_t n_digits = get_n_digits();
+    uint32_t trans_time = get_trans_time();
     
     prev_digits = new uint8_t[n_digits];
     next_digits = new uint8_t[n_digits];
